@@ -56,6 +56,10 @@ def get_access_token() -> str:
         "refresh_token": GOOGLE_REFRESH_TOKEN,
         "grant_type": "refresh_token",
     }, timeout=10)
+    if not resp.ok:
+        # The APIs put the actionable part in the body (e.g. invalid_grant =
+        # revoked refresh token), which raise_for_status() discards.
+        print(f"{TOKEN_URL} returned {resp.status_code}: {resp.text}", file=sys.stderr)
     resp.raise_for_status()
     data = resp.json()
     token = data.get("access_token")
@@ -81,9 +85,9 @@ def _fetch_for_date(url: str, access_token: str, date_str: str,
         "filter": f'{field} >= "{date_str}" AND {field} < "{next_day}"',
         "pageSize": 100,
     }, timeout=20)
-    if resp.status_code != 200:
+    if not resp.ok:
         print(f"{url} returned {resp.status_code}: {resp.text}", file=sys.stderr)
-        resp.raise_for_status()
+    resp.raise_for_status()
 
     points = resp.json().get("dataPoints", [])
     # Results are ordered newest-first, so [0] is the day's last measurement.
@@ -117,6 +121,8 @@ def push_to_trendweight(weight_kg: float, fat_ratio: float | None,
         "Authorization": f"Bearer {TRENDWEIGHT_API_KEY}",
         "Content-Type": "application/json",
     }, timeout=15)
+    if not resp.ok:
+        print(f"{url} returned {resp.status_code}: {resp.text}", file=sys.stderr)
     resp.raise_for_status()
     fat_str = f", fat {fat_ratio * 100:.1f}%" if fat_ratio is not None else ""
     print(f"Synced {weight_kg} kg{fat_str} for {date_str} → TrendWeight ({resp.status_code})")
