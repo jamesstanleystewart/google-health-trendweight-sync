@@ -27,7 +27,7 @@ Fetches from Google Health but doesn't write to TrendWeight. If you see a weight
 
 ### 4. Cron (Raspberry Pi)
 
-Run daily at 8am:
+Run hourly (picks up whatever time you step on the scale, TrendWeight PUT is idempotent so duplicates are harmless):
 
 ```bash
 crontab -e
@@ -36,7 +36,7 @@ crontab -e
 Add:
 
 ```
-0 8 * * * /usr/bin/python3 /home/pi/google-health-trendweight-sync/weight_sync.py >> /home/pi/weight_sync.log 2>&1
+0 * * * * /usr/bin/python3 /home/pi/google-health-trendweight-sync/weight_sync.py >> /home/pi/weight_sync.log 2>&1
 ```
 
 Adjust the Python path (`which python3`) and repo path as needed.
